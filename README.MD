@@ -1,37 +1,40 @@
-# Deep Seek Crawler
+# Toolify AI Scraper
 
-This project is a web crawler built with Python that extracts venue data (wedding reception venues) from a website using asynchronous programming with Crawl4AI. It utilizes a language model-based extraction strategy and saves the collected data to a CSV file.
+This project is a web crawler built with Python that extracts AI tool data from Toolify.ai using asynchronous programming with Crawl4AI. It utilizes a language model-based extraction strategy and saves the collected data to a JSON file.
 
 ## Features
 
 - Asynchronous web crawling using [Crawl4AI](https://pypi.org/project/Crawl4AI/)
 - Data extraction powered by a language model (LLM)
-- CSV export of extracted venue information
-- Modular and easy-to-follow code structure ideal for beginners
+- JSON export of extracted AI tool information
+- Smart categorization of AI tools
+- Modular and easy-to-follow code structure
 
 ## Project Structure
 ```
 .
-├── main.py # Main entry point for the crawler
-├── config.py # Contains configuration constants (Base URL, CSS selectors, etc.)
+├── main.py             # Main entry point for the crawler
+├── config.py           # Contains configuration constants (Base URL, CSS selectors, etc.)
 ├── models
-│ └── venue.py # Defines the Venue data model using Pydantic
+│ └── venue.py         # Defines the Tool data model using Pydantic
 ├── utils
-│ ├── init.py # (Empty) Package marker for utils
-│ ├── data_utils.py # Utility functions for processing and saving data
+│ ├── __init__.py      # (Empty) Package marker for utils
+│ ├── data_utils.py    # Utility functions for processing and saving data
+│ ├── category_utils.py # Functions for AI tool categorization
 │ └── scraper_utils.py # Utility functions for configuring and running the crawler
-├── requirements.txt # Python package dependencies
-├── .gitignore # Git ignore file (e.g., excludes .env and CSV files)
-└── README.MD # This file
+├── requirements.txt    # Python package dependencies
+├── .gitignore         # Git ignore file
+└── README.MD          # This file
 ```
 
 ## Installation
 
-1. **Create and Activate a Conda Environment**
+1. **Create and Activate a Python Virtual Environment** (Optional but recommended)
 
    ```bash
-   conda create -n deep-seek-crawler python=3.12 -y
-   conda activate deep-seek-crawler
+   python -m venv venv
+   source venv/bin/activate  # On Unix/macOS
+   venv\Scripts\activate     # On Windows
    ```
 
 2. **Install Dependencies**
@@ -48,7 +51,7 @@ This project is a web crawler built with Python that extracts venue data (weddin
    GROQ_API_KEY=your_groq_api_key_here
    ```
 
-   *(Note: The `.env` file is in your .gitignore, so it won’t be pushed to version control.)*
+   *(Note: The `.env` file is in your .gitignore, so it won't be pushed to version control.)*
 
 ## Usage
 
@@ -58,24 +61,52 @@ To start the crawler, run:
 python main.py
 ```
 
-The script will crawl the specified website, extract data page by page, and save the complete venues to a `complete_venues.csv` file in the project directory. Additionally, usage statistics for the LLM strategy will be displayed after crawling.
+The script will:
+1. Crawl Toolify.ai
+2. Extract detailed information about each AI tool
+3. Categorize tools based on their descriptions
+4. Save the complete data to `toolify_ai_tools.json` in the project directory
 
 ## Configuration
 
 The `config.py` file contains key constants used throughout the project:
 
-- **BASE_URL**: The URL of the website from which to extract venue data.
-- **CSS_SELECTOR**: CSS selector string used to target venue content.
-- **REQUIRED_KEYS**: List of required fields to consider a venue complete.
+- **BASE_URL**: The URL of Toolify.ai
+- **SELECTORS**: CSS selectors used to target tool information
+- **XPATH_SELECTORS**: XPath fallbacks for complex selections
+- **REQUIRED_KEYS**: List of required fields for each tool
 
-You can modify these values as needed.
+## Tool Categories
 
-## Additional Notes
+The scraper categorizes AI tools into the following categories:
 
-- **Logging:** The project currently uses print statements for status messages. For production or further development, consider integrating Python’s built-in `logging` module.
-- **Improvements:** The code is structured in multiple modules to maintain separation of concerns, making it easier for beginners to follow and extend the functionality.
-- **Dependencies:** Ensure that the package versions specified in `requirements.txt` are installed to avoid compatibility issues.
+- AI Marketing & Advertising
+- AI Content & Media
+- AI Analytics & Scheduling
+- AI Image & Graphics
+- AI Development
+- Development Tools
+- Other
+
+Each tool is analyzed and placed in the most appropriate category based on its description and features.
+
+## Output Format
+
+The tools are saved in JSON format with the following structure for each tool:
+
+```json
+{
+  "name": "Tool Name",
+  "full_description": "Detailed description...",
+  "features": ["Feature 1", "Feature 2", ...],
+  "social_links": ["https://twitter...", "https://linkedin..."],
+  "support_email": "support@tool.com",
+  "pricing_link": "https://tool.com/pricing",
+  "image_url": "https://tool.com/logo.png",
+  "category": "AI Category"
+}
+```
 
 ## License
 
-Include license information if applicable.
+MIT License
