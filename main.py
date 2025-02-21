@@ -153,9 +153,9 @@ async def load_all_tools(page) -> List[str]:
     """
     tool_urls = set()  # Use set to avoid duplicates
     page_num = 1
-    total_pages = 2  # Reduced from 23 to 2 for testing
+    total_pages = 23  # Full number of pages
     
-    print(f"\nLoading all tools (testing with {total_pages} pages)...")
+    print(f"\nLoading all tools ({total_pages} pages)...")
     
     while page_num <= total_pages:
         try:
@@ -245,10 +245,6 @@ async def scrape_tools():
         # First collect all tool URLs
         tool_urls = await load_all_tools(page)
         print(f"\nCollected {len(tool_urls)} unique tool URLs")
-        
-        # Take only first 10 URLs for testing
-        tool_urls = tool_urls[:10]
-        print(f"Processing {len(tool_urls)} test URLs")
         
         # Process each URL independently
         try:
