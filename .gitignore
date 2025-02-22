@@ -7,6 +7,7 @@ __pycache__/
 *$py.class
 *.so
 .Python
+env/
 build/
 develop-eggs/
 dist/
@@ -26,7 +27,6 @@ wheels/
 # Virtual Environment
 venv/
 ENV/
-env/
 
 # IDE
 .idea/
@@ -44,5 +44,11 @@ ehthumbs.db
 Thumbs.db
 
 # Project specific
+scraper.log
+screenshots/
+test_scrape_results.json
 toolify_ai_tools.json
+toolify_ai_tools.csv
+toolify_ai_tools_reformatted.json
 scrape_checkpoint.json
+logs/

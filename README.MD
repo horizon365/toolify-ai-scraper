@@ -1,27 +1,29 @@
 # Toolify AI Scraper
 
-This project is a web crawler built with Python that extracts AI tool data from Toolify.ai using asynchronous programming with Crawl4AI. It utilizes a language model-based extraction strategy and saves the collected data to a JSON file.
+This project is a web crawler built with Python that extracts AI tool data from Toolify.ai using asynchronous programming with Playwright. It captures detailed information about each tool, including screenshots, logos, and categorizes them based on their marketing features.
 
 ## Features
 
-- Asynchronous web crawling using [Crawl4AI](https://pypi.org/project/Crawl4AI/)
-- Data extraction powered by a language model (LLM)
-- JSON export of extracted AI tool information
-- Smart categorization of AI tools
-- Modular and easy-to-follow code structure
+- Asynchronous web crawling using Playwright
+- Automatic screenshot capture of tool interfaces
+- Smart logo detection and scoring
+- Marketing-focused categorization
+- Checkpoint system for resumable scraping
+- Detailed logging
+- JSON and CSV export
+- Progress tracking and error handling
 
 ## Project Structure
 ```
 .
 ├── main.py             # Main entry point for the crawler
-├── config.py           # Contains configuration constants (Base URL, CSS selectors, etc.)
-├── models
-│ └── venue.py         # Defines the Tool data model using Pydantic
 ├── utils
-│ ├── __init__.py      # (Empty) Package marker for utils
-│ ├── data_utils.py    # Utility functions for processing and saving data
-│ ├── category_utils.py # Functions for AI tool categorization
-│ └── scraper_utils.py # Utility functions for configuring and running the crawler
+│ ├── __init__.py      # Package marker for utils
+│ ├── data_utils.py    # Data processing and saving utilities
+│ ├── category_utils.py # Marketing category classification
+│ └── scraper_utils.py # Scraping utilities
+├── screenshots/        # Directory for tool screenshots
+├── logs/              # Directory for log files
 ├── requirements.txt    # Python package dependencies
 ├── .gitignore         # Git ignore file
 └── README.MD          # This file
@@ -37,73 +39,99 @@ This project is a web crawler built with Python that extracts AI tool data from 
    venv\Scripts\activate     # On Windows
    ```
 
-2. **Install Dependencies**
+2. **Install Python Dependencies**
 
    ```bash
-   pip install -r requirements.txt
+   pip install playwright beautifulsoup4
    ```
 
-3. **Set Up Your Environment Variables**
+3. **Install Playwright Browsers**
 
-   Create a `.env` file in the root directory with content similar to:
-
-   ```env
-   GROQ_API_KEY=your_groq_api_key_here
+   ```bash
+   playwright install chromium
    ```
-
-   *(Note: The `.env` file is in your .gitignore, so it won't be pushed to version control.)*
 
 ## Usage
 
-To start the crawler, run:
+The scraper supports several modes of operation:
 
-```bash
-python main.py
-```
+1. **Run a Full Scrape**
+   ```bash
+   python main.py
+   ```
+   This will:
+   - Scrape all tools from Toolify.ai
+   - Save screenshots to the `screenshots` directory
+   - Save progress to `toolify_ai_tools.json`
+   - Create checkpoints in `scrape_checkpoint.json`
+   - Save logs to `scraper.log`
+   - Convert results to CSV when done
 
-The script will:
-1. Crawl Toolify.ai
-2. Extract detailed information about each AI tool
-3. Categorize tools based on their descriptions
-4. Save the complete data to `toolify_ai_tools.json` in the project directory
+2. **Run a Test Scrape** (first page only)
+   ```bash
+   python main.py --test
+   ```
+   This will scrape only the first few tools to test the setup.
 
-## Configuration
+3. **Resume a Previous Scrape**
+   ```bash
+   python main.py --resume
+   ```
+   This will continue from the last checkpoint if one exists.
 
-The `config.py` file contains key constants used throughout the project:
+4. **Convert Existing JSON to CSV**
+   ```bash
+   python main.py --convert input.json output.csv
+   ```
+   This will convert an existing JSON file to CSV format.
 
-- **BASE_URL**: The URL of Toolify.ai
-- **SELECTORS**: CSS selectors used to target tool information
-- **XPATH_SELECTORS**: XPath fallbacks for complex selections
-- **REQUIRED_KEYS**: List of required fields for each tool
+## Output Files
 
-## Tool Categories
+- `toolify_ai_tools.json`: Main output file with all tool data
+- `toolify_ai_tools.csv`: CSV version of the data
+- `scraper.log`: Detailed logging information
+- `scrape_checkpoint.json`: Checkpoint file for resuming scrapes
+- `screenshots/`: Directory containing tool screenshots:
+  - `*_full.png`: Full page screenshots
+  - `*_content.png`: Main content area screenshots
+  - `*_features.png`: Features section screenshots
+  - `*_hero.png`: Header/hero section screenshots
 
-The scraper categorizes AI tools into the following categories:
+## Marketing Categories
 
-- AI Marketing & Advertising
-- AI Content & Media
-- AI Analytics & Scheduling
-- AI Image & Graphics
-- AI Development
-- Development Tools
-- Other
+The scraper categorizes tools into marketing-focused categories:
 
-Each tool is analyzed and placed in the most appropriate category based on its description and features.
+- Marketing & Advertising
+- Social Media Marketing
+- Content Marketing
+- Email Marketing
+- SEO Tools
+- Analytics & Insights
+- Marketing Automation
+- Visual Marketing
+
+Each tool is analyzed based on its features and description to determine the most appropriate marketing category.
 
 ## Output Format
 
-The tools are saved in JSON format with the following structure for each tool:
+The tools are saved in JSON format with the following structure:
 
 ```json
 {
   "name": "Tool Name",
+  "category": "Marketing Category",
   "full_description": "Detailed description...",
   "features": ["Feature 1", "Feature 2", ...],
   "social_links": ["https://twitter...", "https://linkedin..."],
-  "support_email": "support@tool.com",
   "pricing_link": "https://tool.com/pricing",
-  "image_url": "https://tool.com/logo.png",
-  "category": "AI Category"
+  "logo_url": "https://tool.com/logo.png",
+  "img_url": "https://cdn-images.toolify.ai/screenshots/tool_content.png",
+  "screenshots": {
+    "full": "https://cdn-images.toolify.ai/screenshots/tool_full.png",
+    "content": "https://cdn-images.toolify.ai/screenshots/tool_content.png",
+    "features": "https://cdn-images.toolify.ai/screenshots/tool_features.png",
+    "hero": "https://cdn-images.toolify.ai/screenshots/tool_hero.png"
+  }
 }
 ```
 

@@ -5,7 +5,6 @@ from crawl4ai import LLMExtractionStrategy
 import re
 import pandas as pd
 
-from models.venue import Tool
 from config import OUTPUT_FILE
 from utils.category_utils import categorize_tool, get_all_categories
 
@@ -16,37 +15,47 @@ DEFAULT_VALUES = {
 
 # Initialize LLM strategy for categorization
 CATEGORIZATION_PROMPT = """
-You are an expert at categorizing AI tools. Analyze the AI tool's name and detailed description, then categorize it into exactly ONE of these categories. Focus on the tool's primary function and core value proposition:
+You are an expert at categorizing AI marketing tools. Analyze the AI tool's name and detailed description, then categorize it into exactly ONE of these categories. Focus on the tool's primary function and core value proposition:
 
-AI Marketing & Advertising
-- Marketing automation, ad campaign management, social media tools, email marketing
-- Examples: Ad generators, social media managers, email automation platforms
-- Core functions: Marketing campaigns, ad creation, social media management, SEO, CRM
+Marketing & Advertising
+- Ad campaign management, PPC, media buying, display ads
+- Examples: Ad campaign managers, PPC optimization tools, ad creative tools
+- Core functions: Campaign management, ad optimization, targeting
 
-AI Content & Media
-- Content creation, video/audio production, writing tools
-- Examples: Video generators, blog writers, podcast tools, content repurposing
-- Core functions: Content generation, video creation, writing assistance, media editing
+Social Media Marketing
+- Social media management, scheduling, analytics, engagement
+- Examples: Social media managers, scheduling tools, analytics platforms
+- Core functions: Content scheduling, engagement tracking, social analytics
 
-AI Analytics & Scheduling
-- Data analysis, workflow automation, productivity tools
-- Examples: Analytics dashboards, scheduling assistants, project management
-- Core functions: Data processing, task automation, scheduling, reporting
+Content Marketing
+- Content creation, blog writing, copywriting, content strategy
+- Examples: AI writers, content generators, blog post creators
+- Core functions: Content generation, writing assistance, content planning
 
-AI Image & Graphics
-- Image generation, editing, visual design tools
-- Examples: Image editors, design tools, avatar creators
-- Core functions: Image creation, photo editing, graphic design, visual assets
+Email Marketing
+- Email automation, newsletters, campaign management
+- Examples: Email automation tools, newsletter platforms, sequence builders
+- Core functions: Email campaigns, automation, deliverability
 
-AI Development
-- LLM infrastructure, AI frameworks, model development
-- Examples: Language models, AI APIs, training platforms
-- Core functions: AI model development, LLM deployment, AI infrastructure
+SEO Tools
+- Keyword research, rank tracking, backlink analysis
+- Examples: SEO analyzers, rank trackers, site auditors
+- Core functions: SEO optimization, keyword tracking, site analysis
 
-Development Tools
-- Programming assistance, no-code/low-code platforms
-- Examples: Code generators, development platforms, debugging tools
-- Core functions: Code assistance, app development, technical tools
+Analytics & Insights
+- Marketing analytics, performance tracking, ROI measurement
+- Examples: Analytics dashboards, attribution tools, reporting platforms
+- Core functions: Data analysis, reporting, performance tracking
+
+Marketing Automation
+- Workflow automation, CRM integration, lead nurturing
+- Examples: Marketing automation platforms, CRM tools, workflow builders
+- Core functions: Process automation, lead management, integration
+
+Visual Marketing
+- Marketing video/image creation, ad creative design
+- Examples: Video creators, image generators, design tools
+- Core functions: Visual content creation, ad creative design
 
 Tool to categorize:
 Name: {name}
@@ -127,70 +136,67 @@ def consolidate_categories(categories: List[str]) -> List[str]:
     """
     # Our standardized categories
     VALID_CATEGORIES = {
-        "AI Marketing & Advertising",
-        "AI Content & Media", 
-        "AI Analytics & Scheduling",
-        "AI Image & Graphics",
-        "AI Development",
-        "Development Tools",
+        "Marketing & Advertising",
+        "Social Media Marketing",
+        "Content Marketing",
+        "Email Marketing",
+        "SEO Tools",
+        "Analytics & Insights",
+        "Marketing Automation",
+        "Visual Marketing",
         "Other"
     }
     
     # Category mapping to consolidate similar/overlapping categories
     CATEGORY_MAPPING = {
         # Marketing & Advertising
-        "Marketing Analytics & Automation": "AI Marketing & Advertising",
-        "Social Media Marketing": "AI Marketing & Advertising",
-        "Email & Conversational AI": "AI Marketing & Advertising",
-        "Digital Marketing": "AI Marketing & Advertising",
-        "Social Media Management": "AI Marketing & Advertising",
-        "Email Marketing": "AI Marketing & Advertising",
-        "Marketing Automation": "AI Marketing & Advertising",
-        "SEO Tools": "AI Marketing & Advertising",
-        "CRM": "AI Marketing & Advertising",
+        "Digital Advertising": "Marketing & Advertising",
+        "PPC Tools": "Marketing & Advertising",
+        "Ad Management": "Marketing & Advertising",
+        "Display Advertising": "Marketing & Advertising",
         
-        # Content & Media
-        "Content Creation": "AI Content & Media",
-        "Video Creation": "AI Content & Media",
-        "Content Writing": "AI Content & Media",
-        "Video Generation": "AI Content & Media",
-        "Audio Production": "AI Content & Media",
-        "Podcast Creation": "AI Content & Media",
-        "Blog Writing": "AI Content & Media",
-        "Video Marketing": "AI Content & Media",
+        # Social Media Marketing
+        "Social Media Management": "Social Media Marketing",
+        "Social Media Analytics": "Social Media Marketing",
+        "Social Media Automation": "Social Media Marketing",
+        "Social Media Scheduling": "Social Media Marketing",
         
-        # Analytics & Scheduling
-        "Analytics Platform": "AI Analytics & Scheduling",
-        "Data Analysis": "AI Analytics & Scheduling",
-        "Workflow Automation": "AI Analytics & Scheduling",
-        "Task Management": "AI Analytics & Scheduling",
-        "Project Management": "AI Analytics & Scheduling",
-        "Productivity Tools": "AI Analytics & Scheduling",
-        "Scheduling Tools": "AI Analytics & Scheduling",
+        # Content Marketing
+        "Content Creation": "Content Marketing",
+        "Content Writing": "Content Marketing",
+        "Blog Writing": "Content Marketing",
+        "Copywriting": "Content Marketing",
+        "Content Strategy": "Content Marketing",
         
-        # Image & Graphics
-        "Image Generation": "AI Image & Graphics",
-        "Image Editing": "AI Image & Graphics",
-        "Graphic Design": "AI Image & Graphics",
-        "Photo Editing": "AI Image & Graphics",
-        "Visual Design": "AI Image & Graphics",
-        "Image Recognition": "AI Image & Graphics",
+        # Email Marketing
+        "Email Automation": "Email Marketing",
+        "Newsletter Tools": "Email Marketing",
+        "Email Campaign": "Email Marketing",
+        "Email Marketing Platform": "Email Marketing",
         
-        # Development
-        "AI Platform": "AI Development",
-        "LLM Development": "AI Development",
-        "AI Framework": "AI Development",
-        "Machine Learning": "AI Development",
-        "Model Training": "AI Development",
-        "AI Infrastructure": "AI Development",
+        # SEO Tools
+        "SEO Software": "SEO Tools",
+        "Keyword Research": "SEO Tools",
+        "Rank Tracking": "SEO Tools",
+        "SEO Analytics": "SEO Tools",
         
-        # Development Tools
-        "Development Platform": "Development Tools",
-        "Code Generation": "Development Tools",
-        "Programming Tools": "Development Tools",
-        "No-Code Platform": "Development Tools",
-        "Low-Code Platform": "Development Tools",
-        "Developer Tools": "Development Tools"
+        # Analytics & Insights
+        "Marketing Analytics": "Analytics & Insights",
+        "Performance Analytics": "Analytics & Insights",
+        "Marketing Metrics": "Analytics & Insights",
+        "Data Analytics": "Analytics & Insights",
+        
+        # Marketing Automation
+        "Workflow Automation": "Marketing Automation",
+        "CRM Tools": "Marketing Automation",
+        "Lead Management": "Marketing Automation",
+        "Marketing Workflow": "Marketing Automation",
+        
+        # Visual Marketing
+        "Video Marketing": "Visual Marketing",
+        "Image Creation": "Visual Marketing",
+        "Design Tools": "Visual Marketing",
+        "Visual Content": "Visual Marketing"
     }
     
     # Clean categories
@@ -213,12 +219,14 @@ def consolidate_categories(categories: List[str]) -> List[str]:
 def get_llm_category(name: str, description: str) -> str:
     """Use LLM to categorize a tool based on name and description."""
     VALID_CATEGORIES = {
-        "AI Marketing & Advertising",
-        "AI Content & Media",
-        "AI Analytics & Scheduling",
-        "AI Image & Graphics",
-        "AI Development",
-        "Development Tools",
+        "Marketing & Advertising",
+        "Social Media Marketing",
+        "Content Marketing",
+        "Email Marketing",
+        "SEO Tools",
+        "Analytics & Insights",
+        "Marketing Automation",
+        "Visual Marketing",
         "Other"
     }
     
@@ -241,12 +249,14 @@ def get_llm_category(name: str, description: str) -> str:
 Description: {description[:1000]}
 
 Based on the above information, categorize this tool into exactly ONE of these categories:
-- AI Marketing & Advertising (marketing automation, ad campaigns, social media)
-- AI Content & Media (content creation, video/audio production, writing)
-- AI Analytics & Scheduling (data analysis, workflow automation, productivity)
-- AI Image & Graphics (image generation, editing, visual design)
-- AI Development (LLM infrastructure, AI frameworks, model development)
-- Development Tools (programming assistance, no-code platforms)
+- Marketing & Advertising (ad campaigns, PPC, media buying)
+- Social Media Marketing (social media management, scheduling)
+- Content Marketing (content creation, blog writing, copywriting)
+- Email Marketing (email automation, newsletters)
+- SEO Tools (keyword research, rank tracking)
+- Analytics & Insights (marketing analytics, performance tracking)
+- Marketing Automation (workflow automation, CRM)
+- Visual Marketing (video/image creation, ad creative design)
 
 Respond with ONLY the category name, nothing else."""
 
@@ -304,36 +314,271 @@ Respond with ONLY the category name, nothing else."""
 
 def format_tool_data(raw_data: Dict[str, Any]) -> Dict[str, Any]:
     """Format and clean tool data with proper categorization."""
-    # Get name and description
-    name = raw_data.get("name", "")
-    description = raw_data.get("full_description", "") or raw_data.get("description", "")
+    # Get name and raw description
+    name = raw_data.get("name", "").strip()
+    raw_description = raw_data.get("full_description", "") or raw_data.get("description", "")
     
     print(f"\n=== Formatting tool: {name} ===")
     
-    # Get main category using keyword-based categorization
-    category = categorize_tool(name, description)
+    # Extract different sections from the description
+    description_parts = extract_description_parts(raw_description)
+    
+    # Get main category
+    category = categorize_tool(name, description_parts["short_description"])
     print(f"Final category: {category}")
     
-    # Create new dictionary with only the fields we want
-    formatted_data = clean_tool_data(raw_data)
+    # Get image URLs, checking both field names
+    main_image = raw_data.get("img_url") or raw_data.get("image_url", "")
+    logo_image = raw_data.get("logo_url", "")
     
-    # Ensure required fields are present
-    formatted_data["name"] = name
-    formatted_data["full_description"] = description
-    formatted_data["category"] = category  # Add the category
-    formatted_data["features"] = formatted_data.get("features", [])
-    formatted_data["social_links"] = formatted_data.get("social_links", [])
+    # Clean URLs
+    main_image = clean_url(main_image)
+    logo_image = clean_url(logo_image)
     
-    # Print summary of formatted data
-    print(f"Features: {len(formatted_data['features'])}")
-    print(f"Social links: {len(formatted_data['social_links'])}")
-    print(f"Support email: {'Yes' if formatted_data.get('support_email') else 'No'}")
-    print(f"Pricing link: {'Yes' if formatted_data.get('pricing_link') else 'No'}")
-    print(f"Image URL: {'Yes' if formatted_data.get('image_url') else 'No'}")
-    print(f"Category: {formatted_data['category']}")
+    print(f"Main image URL: {main_image}")
+    print(f"Logo URL: {logo_image}")
+    
+    # Create new dictionary with cleaned and structured data
+    formatted_data = {
+        "name": name,
+        "short_description": description_parts["short_description"],
+        "how_to_use": description_parts["how_to_use"],
+        "features": description_parts["features"],
+        "use_cases": description_parts["use_cases"],
+        "social_links": {
+            "website": clean_url(raw_data.get("website", "")),
+            "discord": description_parts["discord_link"],
+            "facebook": description_parts["facebook_link"],
+            "twitter": description_parts["twitter_link"],
+            "linkedin": description_parts["linkedin_link"],
+            "youtube": description_parts["youtube_link"],
+            "instagram": description_parts["instagram_link"]
+        },
+        "links": {
+            "login": description_parts["login_link"],
+            "signup": description_parts["signup_link"],
+            "pricing": clean_url(raw_data.get("pricing_link", "")),
+            "contact": description_parts["contact_link"]
+        },
+        "support_email": clean_email(raw_data.get("support_email", "")),
+        "logo_url": logo_image,
+        "img_url": main_image,
+        "category": category
+    }
     
     return formatted_data
 
+def extract_description_parts(description: str) -> Dict[str, Any]:
+    """Extract different parts from the raw description text."""
+    parts = {
+        "short_description": "",
+        "how_to_use": "",
+        "features": [],
+        "use_cases": [],
+        "discord_link": "",
+        "facebook_link": "",
+        "twitter_link": "",
+        "linkedin_link": "",
+        "youtube_link": "",
+        "instagram_link": "",
+        "login_link": "",
+        "signup_link": "",
+        "contact_link": ""
+    }
+    
+    if not description:
+        return parts
+        
+    # Extract short description (text between "What is X?" and "How to use")
+    match = re.search(r'what is .+?\s+(.*?)(?=how to use|$)', description, re.DOTALL | re.IGNORECASE)
+    if match:
+        parts["short_description"] = clean_text(match.group(1))
+    
+    # Extract how to use section (text between "How to use" and "Core Features")
+    match = re.search(r'how to use .+?\s+(.*?)(?=Core Features|$)', description, re.DOTALL | re.IGNORECASE)
+    if match:
+        parts["how_to_use"] = clean_text(match.group(1))
+    
+    # Extract features (text between "Core Features" and "Use Cases" or "FAQ")
+    match = re.search(r"Core Features\s*(.*?)(?=Use Cases|FAQ|Support Email|$)", description, re.DOTALL | re.IGNORECASE)
+    if match:
+        features_text = match.group(1)
+        # Split on multiple spaces or numbers with dots
+        features = re.split(r'\s{2,}|\d+\.', features_text)
+        parts["features"] = [
+            clean_text(feature) 
+            for feature in features
+            if clean_text(feature)
+        ]
+    
+    # Extract use cases (text between "Use Cases" and "FAQ")
+    match = re.search(r"Use Cases\s*(.*?)(?=FAQ|Support Email|$)", description, re.DOTALL | re.IGNORECASE)
+    if match:
+        use_cases_text = match.group(1)
+        # Split on #number or multiple spaces
+        use_cases = re.split(r'#\d+|\s{2,}', use_cases_text)
+        parts["use_cases"] = [
+            clean_text(case)
+            for case in use_cases
+            if clean_text(case)
+        ]
+    
+    # Extract social and other links
+    links = {
+        "discord": r'discord(?:\.gg|app\.com)/([^"\s]+)',
+        "facebook": r'facebook\.com/([^"\s]+)',
+        "twitter": r'twitter\.com/([^"\s]+)',
+        "linkedin": r'linkedin\.com/(?:company/)?([^"\s]+)',
+        "youtube": r'youtube\.com/(?:@)?([^"\s]+)',
+        "instagram": r'instagram\.com/([^"\s]+)',
+        "login": r'Login Link:\s*(https?://[^"\s]+)',
+        "signup": r'Sign up Link:\s*(https?://[^"\s]+)',
+        "contact": r'contact us page\s*\((https?://[^)]+)\)'
+    }
+    
+    for link_type, pattern in links.items():
+        match = re.search(pattern, description, re.IGNORECASE)
+        if match:
+            url = match.group(1)
+            if not url.startswith(('http://', 'https://')):
+                if link_type in ['login', 'signup', 'contact']:
+                    url = match.group(1)  # Full URL was captured
+                else:
+                    # Reconstruct social media URLs
+                    domains = {
+                        "discord": "discord.gg",
+                        "facebook": "facebook.com",
+                        "twitter": "twitter.com",
+                        "linkedin": "linkedin.com",
+                        "youtube": "youtube.com",
+                        "instagram": "instagram.com"
+                    }
+                    url = f"https://{domains[link_type]}/{url}"
+            parts[f"{link_type}_link"] = url
+    
+    return parts
+
+def clean_text(text: str) -> str:
+    """Clean up text by removing extra whitespace and unwanted characters."""
+    if not text:
+        return ""
+    
+    # Remove extra whitespace
+    text = re.sub(r'\s+', ' ', text)
+    # Remove special characters but keep some punctuation
+    text = re.sub(r'[^\w\s.,!?()-]', '', text)
+    # Remove any remaining whitespace at ends
+    return text.strip()
+
+def extract_link(text: str, link_type: str, pattern: str) -> str:
+    """Extract specific type of link from text using regex pattern."""
+    match = re.search(pattern, text, re.IGNORECASE)
+    if match:
+        link = match.group(0) if len(match.groups()) == 0 else match.group(1)
+        return f"https://{link}" if not link.startswith(('http://', 'https://')) else link
+    return ""
+
+def clean_description(description: str) -> str:
+    """Clean up description text by removing Q&A format and extra whitespace."""
+    if not description:
+        return ""
+        
+    # Remove Q&A format
+    description = re.sub(r'What is .+?\?', '', description)
+    description = re.sub(r'How to use .+?\?', '', description)
+    
+    # Remove FAQ section
+    description = re.sub(r'FAQ from.*?$', '', description, flags=re.DOTALL)
+    
+    # Clean up whitespace
+    description = re.sub(r'\s+', ' ', description)
+    description = description.strip()
+    
+    return description
+
+def clean_features(features: List[str]) -> List[str]:
+    """Clean up feature list by removing duplicates and empty entries."""
+    if not features:
+        return []
+        
+    cleaned = []
+    seen = set()
+    
+    for feature in features:
+        feature = feature.strip()
+        if feature and feature not in seen:
+            cleaned.append(feature)
+            seen.add(feature)
+            
+    return cleaned
+
+def clean_social_links(links: List[str]) -> List[str]:
+    """Clean up social links by removing duplicates and invalid links."""
+    if not links:
+        return []
+        
+    valid_links = []
+    seen = set()
+    
+    for link in links:
+        # Skip tweet intent links
+        if 'intent/tweet' in link:
+            continue
+            
+        # Ensure link is a valid URL
+        if link.startswith(('http://', 'https://')):
+            if link not in seen:
+                valid_links.append(link)
+                seen.add(link)
+                
+    return valid_links
+
+def clean_email(email: str) -> str:
+    """Clean up email address and validate format."""
+    if not email:
+        return ""
+        
+    email = email.strip().lower()
+    
+    # Skip default email
+    if email == DEFAULT_VALUES['support_email']:
+        return ""
+        
+    # Basic email validation
+    if '@' in email and '.' in email:
+        return email
+        
+    return ""
+
+def clean_url(url: str) -> str:
+    """Clean up URL and validate format."""
+    if not url:
+        return ""
+        
+    url = url.strip()
+    
+    # Skip default image
+    if 'logo.f3a91ce.png' in url:
+        print(f"Skipping default logo URL: {url}")
+        return ""
+        
+    # Handle relative URLs
+    if url.startswith('/'):
+        url = f"https://www.toolify.ai{url}"
+        print(f"Converted relative URL to: {url}")
+        
+    # Handle protocol-relative URLs
+    if url.startswith('//'):
+        url = f"https:{url}"
+        print(f"Converted protocol-relative URL to: {url}")
+        
+    # Ensure URL starts with http:// or https://
+    if not url.startswith(('http://', 'https://')):
+        print(f"Invalid URL format: {url}")
+        return ""
+        
+    print(f"Valid URL found: {url}")
+    return url
 
 def save_tools_to_json(tools: List[Dict], filename: str = None) -> None:
     """
@@ -460,24 +705,80 @@ def json_to_csv(json_file_path: str, csv_file_path: str) -> None:
     # Flatten and clean the data
     flattened_data = []
     for item in data:
+        # Get social links as comma-separated string
+        social_links = []
+        if isinstance(item.get('social_links', []), (dict, list)):
+            if isinstance(item.get('social_links'), dict):
+                for platform, link in item.get('social_links', {}).items():
+                    if link and isinstance(link, str) and link.startswith('http'):
+                        social_links.append(f"{platform}: {link}")
+            else:
+                social_links = [link for link in item.get('social_links', []) if link and isinstance(link, str) and link.startswith('http')]
+        
+        # Get links as comma-separated string
+        important_links = []
+        if isinstance(item.get('links', {}), dict):
+            for link_type, url in item.get('links', {}).items():
+                if url and isinstance(url, str) and url.startswith('http'):
+                    important_links.append(f"{link_type}: {url}")
+
+        # Get logo URL and main image URL
+        logo_url = None
+        img_url = None
+        
+        # Try multiple fields for logo
+        logo_fields = ['logo_url', 'image_url', 'logo', 'img_url']
+        for field in logo_fields:
+            if item.get(field):
+                url = item[field]
+                if isinstance(url, str) and url.startswith('http'):
+                    if not logo_url:  # Prefer first match for logo
+                        logo_url = url
+                    elif not img_url:  # Use second match for main image
+                        img_url = url
+                    break
+                
+        # Create flattened dictionary
         flat_item = {
             'name': item.get('name', ''),
-            'description': item.get('description', ''),
-            'how_to_use': item.get('how_to_use', ''),
-            'features': '|'.join(item.get('features', [])),
-            'social_links': '|'.join(item.get('social_links', [])),
-            'support_email': item.get('support_email', ''),
-            'pricing_link': item.get('pricing_link', ''),
-            'image_url': item.get('image_url', ''),
             'category': item.get('category', ''),
-            'faq_count': len(item.get('faq', [])),
-            'first_faq_q': item.get('faq', [{}])[0].get('question', '') if item.get('faq') else ''
+            'short_description': item.get('short_description', '') or item.get('meta_description', ''),
+            'how_to_use': item.get('how_to_use', ''),
+            'features': '|'.join(item.get('features', [])) if isinstance(item.get('features', []), list) else str(item.get('features', '')),
+            'use_cases': '|'.join(item.get('use_cases', [])) if isinstance(item.get('use_cases', []), list) else str(item.get('use_cases', '')),
+            'social_links': '|'.join(social_links),
+            'important_links': '|'.join(important_links),
+            'support_email': item.get('support_email', ''),
+            'logo_url': logo_url or '',
+            'img_url': img_url or ''  # Add main image URL to CSV
         }
         flattened_data.append(flat_item)
     
     # Convert to DataFrame and save as CSV
     df = pd.DataFrame(flattened_data)
+    
+    # Reorder columns
+    column_order = [
+        'name',
+        'category',
+        'short_description',
+        'how_to_use',
+        'features',
+        'use_cases',
+        'social_links',
+        'important_links',
+        'support_email',
+        'logo_url',
+        'img_url'  # Add main image URL column
+    ]
+    
+    df = df[column_order]
     df.to_csv(csv_file_path, index=False, encoding='utf-8')
+    
+    print(f"\nCreated CSV file with {len(df)} rows and the following columns:")
+    for col in df.columns:
+        non_empty = df[col].str.len().gt(0).sum() if df[col].dtype == 'object' else df[col].notna().sum()
+        print(f"- {col}: {non_empty} non-empty values")
 
 
 # Legacy method removed as it's no longer needed for AI tools
@@ -547,3 +848,17 @@ async def extract_tool_details(page, url):
     except Exception as e:
         print(f"Error extracting details: {str(e)}")
         return {}
+
+
+def save_to_json(data, filename):
+    """
+    Save data to a JSON file
+    
+    Args:
+        data: The data to save (typically a list or dictionary)
+        filename (str): The name of the file to save to (including .json extension)
+    """
+    import json
+    
+    with open(filename, 'w', encoding='utf-8') as f:
+        json.dump(data, f, indent=4, ensure_ascii=False)
