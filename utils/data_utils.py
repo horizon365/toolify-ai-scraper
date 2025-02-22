@@ -3,6 +3,7 @@ from typing import List, Dict, Any
 import os
 from crawl4ai import LLMExtractionStrategy
 import re
+import pandas as pd
 
 from models.venue import Tool
 from config import OUTPUT_FILE
@@ -451,4 +452,98 @@ def print_category_summary(grouped_tools: Dict[str, List[Dict[str, Any]]]) -> No
         print(f"{category}: {len(tools)} tools")
 
 
+def json_to_csv(json_file_path: str, csv_file_path: str) -> None:
+    """Convert JSON file containing tool data to CSV format"""
+    with open(json_file_path, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+    
+    # Flatten and clean the data
+    flattened_data = []
+    for item in data:
+        flat_item = {
+            'name': item.get('name', ''),
+            'description': item.get('description', ''),
+            'how_to_use': item.get('how_to_use', ''),
+            'features': '|'.join(item.get('features', [])),
+            'social_links': '|'.join(item.get('social_links', [])),
+            'support_email': item.get('support_email', ''),
+            'pricing_link': item.get('pricing_link', ''),
+            'image_url': item.get('image_url', ''),
+            'category': item.get('category', ''),
+            'faq_count': len(item.get('faq', [])),
+            'first_faq_q': item.get('faq', [{}])[0].get('question', '') if item.get('faq') else ''
+        }
+        flattened_data.append(flat_item)
+    
+    # Convert to DataFrame and save as CSV
+    df = pd.DataFrame(flattened_data)
+    df.to_csv(csv_file_path, index=False, encoding='utf-8')
+
+
 # Legacy method removed as it's no longer needed for AI tools
+
+async def extract_tool_details(page, url):
+    try:
+        await page.goto(url, wait_until='networkidle')
+        await page.wait_for_selector('.tool-detail-information', timeout=10000)
+        
+        tool_data = {}
+        
+        # Get name (unchanged)
+        name_el = await page.query_selector('h1')
+        if name_el:
+            tool_data['name'] = await name_el.text_content()
+        
+        # Get main description - just the first section
+        description_el = await page.query_selector('.tool-detail-information p:first-of-type')
+        if description_el:
+            tool_data['description'] = (await description_el.text_content()).strip()
+        
+        # Get how to use section
+        how_to_el = await page.query_selector('text="How to use" + p')
+        if how_to_el:
+            tool_data['how_to_use'] = (await how_to_el.text_content()).strip()
+        
+        # Get features as a clean list
+        features = []
+        feature_els = await page.query_selector_all('.features-list li')
+        for feature_el in feature_els:
+            feature_text = (await feature_el.text_content()).strip()
+            if feature_text:
+                features.append(feature_text)
+        tool_data['features'] = features
+        
+        # Get social links - filter for only valid social profiles
+        social_links = []
+        social_els = await page.query_selector_all('a[href*="twitter.com"], a[href*="linkedin.com"]')
+        for social_el in social_els:
+            href = await social_el.get_attribute('href')
+            if href and not 'intent/tweet' in href:  # Filter out tweet intent URLs
+                social_links.append(href)
+        tool_data['social_links'] = list(set(social_links))  # Remove duplicates
+        
+        # Get actual logo image URL
+        logo_el = await page.query_selector('.tool-logo img')
+        if logo_el:
+            src = await logo_el.get_attribute('src')
+            if src and not src.endswith('logo.f3a91ce.png'):
+                tool_data['image_url'] = src
+        
+        # Get FAQ as structured data
+        faq_data = []
+        faq_els = await page.query_selector_all('.faq-section .qa-pair')
+        for faq_el in faq_els:
+            q = await faq_el.query_selector('.question')
+            a = await faq_el.query_selector('.answer')
+            if q and a:
+                faq_data.append({
+                    'question': (await q.text_content()).strip(),
+                    'answer': (await a.text_content()).strip()
+                })
+        tool_data['faq'] = faq_data
+        
+        return tool_data
+        
+    except Exception as e:
+        print(f"Error extracting details: {str(e)}")
+        return {}

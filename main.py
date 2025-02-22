@@ -5,7 +5,7 @@ from typing import List, Dict
 from playwright.async_api import async_playwright
 from urllib.parse import urljoin
 from utils.category_utils import categorize_tool
-from utils.data_utils import get_llm_category
+from utils.data_utils import get_llm_category, save_to_json, json_to_csv
 
 # Configuration
 BASE_URL = "https://www.toolify.ai"
@@ -277,6 +277,16 @@ async def scrape_tools():
             # Clean up checkpoint file after successful completion
             if os.path.exists(CHECKPOINT_FILE):
                 os.remove(CHECKPOINT_FILE)
+                
+            # Save to JSON
+            json_file_path = 'toolify_ai_tools.json'
+            save_to_json(tools, json_file_path)
+            
+            # Convert to CSV
+            csv_file_path = 'toolify_ai_tools.csv'
+            json_to_csv(json_file_path, csv_file_path)
+            
+            print(f"Data has been saved to {json_file_path} and {csv_file_path}")
                 
         except Exception as e:
             print(f"\nError during scraping: {str(e)}")

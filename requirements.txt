@@ -3,3 +3,4 @@ python-dotenv==1.0.1
 pydantic==2.10.6
 playwright>=1.42.0
 asyncio==3.4.3
+pandas>=2.0.0
